@@ -5,3 +5,19 @@
  */
 
 include_once('openpublic_translation_content.features.inc');
+
+/**
+ * Implementation of hook_views_pre_view().
+ *
+ * Add in a language filter for the current language.
+ */
+function openpublic_translation_content_views_pre_view(&$view, $display_id) {
+  if ($view->base_table == 'node') {
+    $view->display[$display_id]->handler->options['filters']['language']['id'] = 'language';
+    $view->display[$display_id]->handler->options['filters']['language']['table'] = 'node';
+    $view->display[$display_id]->handler->options['filters']['language']['field'] = 'language';
+    $view->display[$display_id]->handler->options['filters']['language']['value'] = array(
+      '***CURRENT_LANGUAGE***' => '***CURRENT_LANGUAGE***',
+    );
+  }
+}
