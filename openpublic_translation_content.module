@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the OpenPublic Translation Content feature.
+ */
+
+include_once('openpublic_translation_content.features.inc');
