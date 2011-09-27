@@ -6,6 +6,7 @@
 
 include_once('openpublic_translation_content.features.inc');
 
+
 /**
  * Implementation of hook_views_pre_view().
  *
@@ -21,3 +22,4 @@ function openpublic_translation_content_views_pre_view(&$view, $display_id) {
     );
   }
 }
+

@@ -1,0 +1,12 @@
+name = OpenPublic Content Translation
+description = just testing
+machine_name = openpublic_translation_content
+version = 1.0
+downloadable = openpublic_translation_content 1.0
+author = Phase2 Technology
+author_url = http://www.phase2technology.com/
+logo = logo.png
+screenshots[] = screenshot.jpg
+dependencies[] = locale
+dependencies[] = content_translation
+dependencies[] = openpublic_translation_content
