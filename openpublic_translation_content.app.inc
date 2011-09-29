@@ -21,11 +21,23 @@ function openpublic_translation_content_configure($form, $form_state) {
     '#title' => 'Drupal Language Settings',
   );
 
+  $langs = array();
+  foreach(language_list() as $code => $lang) {
+    $langs[$code] = $lang->name;
+  }
+  $lang_last = array_pop($langs);
+  $langs_string = implode(" and ", array(implode(', ', $langs), $lang_last));
   $form['language']['markup'] = array(
     '#type' => 'markup',
-    '#markup' => t('For Translation to be inplace one must configure the sites languages on the !language_config_link.', array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language'))),
+    '#markup' => t("Currently the site in enabled for @langs, to administer this or add more please see the !language_config_link.", array('@langs' => $langs_string, '!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language'))),
   );
+  # if we only have one language lets warn the user
+  if(empty($langs)) {
+    $form['language']['markup']['#markup'] = t('Currently only one language is configured please add additional languages on the !language_config_link.', array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language')));
 
+    $form['language']['markup']['#prefix'] = "<div class = 'error'>";
+    $form['language']['markup']['#suffix'] = "</div>";
+  }
   # Point to Translation page
   $form['translation'] = array(
     '#type' => 'fieldset',
