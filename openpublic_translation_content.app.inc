@@ -16,37 +16,56 @@ function openpublic_translation_content_configure($form, $form_state) {
   $form = array();
 
   # Point to Langauge page
-  $form['language'] = array(
+  $form['setup'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Drupal Language Settings',
+    '#title' => 'Language Setup',
   );
-
   $langs = array();
   foreach(language_list() as $code => $lang) {
     $langs[$code] = $lang->name;
   }
   $lang_last = array_pop($langs);
   $langs_string = implode(" and ", array(implode(', ', $langs), $lang_last));
-  $form['language']['markup'] = array(
-    '#type' => 'markup',
-    '#markup' => t("Currently the site in enabled for @langs, to administer this or add more please see the !language_config_link.", array('@langs' => $langs_string, '!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language'))),
+  $und_query = db_select("node", 'n');
+  $und_query->condition('n.language', 'und', '=');
+  $count_of_und =$und_query->countQuery()->execute()->fetchField();
+  global $language;
+  $form['setup']['table'] = array(
+    '#theme' => 'table',
+    '#header' => array("Step", "Instructions", "Action"),
+    '#rows' => array(
+      'lang' => array(
+        'data'=> array(
+          t("Language Setup"),
+          t("Currently the site in enabled for @langs, to administer this or add more please see the !language_config_link.", array('@langs' => $langs_string, '!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination())))),
+          l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination())),
+        ),
+      ),
+      'trans' => array(
+        'data'=> array(
+          t("String Translation"),
+          t('Drupal Provides an interface to translate the administion pages on the  !language_config_link.', array('!language_config_link'=> l('Translation Inteface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())))),
+          l('Translation Inteface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())),
+        ),
+      ),
+      'und' => array(
+        'data'=> array(
+          t("Convert Content"),
+          t('When there is only one language on a site all content is labeled with the undefined language, this site as @count such items. If they stay undefined they can not be translated. From here you can convert all of them in mass to the default langague(@default_lang).', array('@count' => $count_of_und, '@default_lang' => $language->native)),
+        l('Convert Undefined Content', 'admin/config/regional/convert-und',array('query'=>drupal_get_destination())),
+        ),
+      ),
+    ),
   );
   # if we only have one language lets warn the user
   if(empty($langs)) {
-    $form['language']['markup']['#markup'] = t('Currently only one language is configured please add additional languages on the !language_config_link.', array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language')));
-
-    $form['language']['markup']['#prefix'] = "<div class = 'error'>";
-    $form['language']['markup']['#suffix'] = "</div>";
+    $form['setup']['table']['#rows']['lang']['data']['1'] = t('Currently only one language is configured please add additional languages on the !language_config_link.',array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination()))));
+    $form['setup']['table']['#rows']['lang']['data']['2'] = l('Add Language', 'admin/config/regional/language/add', array('query'=>drupal_get_destination()));
+    $form['setup']['table']['#rows']['lang']['class'][] = 'error';
   }
-  # Point to Translation page
-  $form['translation'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Drupal Translation Interface',
-  );
-  $form['translation']['markup'] = array(
-    '#type' => 'markup',
-    '#markup' => t('Drupal Provides an interface to translate the administion pages on the  !language_config_link.', array('!language_config_link'=> l('Translation Inteface Page', 'admin/config/regional/translate'))),
-  );
+  if($count_of_und>0) {
+    $form['setup']['table']['#rows']['und']['class'][] = 'warning';
+  }
 
   #allow for views to not get alter with a language filter
   $form['views'] = array(

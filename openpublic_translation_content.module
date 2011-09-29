@@ -24,3 +24,66 @@ function openpublic_translation_content_views_pre_view(&$view, $display_id) {
   }
 }
 
+
+/**
+ * Implements hook_requirements_api()
+ *
+ * Let openpublic know if we have more then one language setup
+ */
+function openpublic_translation_content_requirements_api() {
+  $langs = array();
+  foreach(language_list() as $code => $lang) {
+    $langs[$code] = $lang->name;
+  }
+  $lang_last = array_pop($langs);
+  $langs_string = empty($trans) ? $lang_last :
+    implode(" and ", array(implode(', ', $langs), $lang_last));
+  $tran = array(
+    'title'=> t('OpenPublic Translation content'),
+    'description' => t('For Openpublic Translation Cotent to have an effect there must be more then one language configured. This can be done on the !language_config_link.', array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language'))),
+    'value' => $langs_string,
+  );
+  if(empty($langs)) {
+    $tran['severity'] = REQUIREMENT_ERROR;
+    $tran['value'] = t("Only One language");
+  }
+  else {
+    $tran['severity'] = REQUIREMENT_OK;
+  }
+  return array("openpublic_translation_content", $tran);
+  
+
+}
+
+/**
+ * implements hook_menu()
+ */
+function openpublic_translation_content_menu() {
+  return array(
+    'admin/config/regional/convert-und' => array(
+      'page callback' => 'openpublic_translation_content_convert_und',
+      'access callback' => TRUE,
+      //TODO: add perm 
+    ),
+  );
+
+}
+/**
+ * page call back for admin/config/regional/convert-und
+ *
+ * Convert all und to the current language and then return 
+ */
+function openpublic_translation_content_convert_und() {
+  global $language;
+  $num_updated = db_update('node') // Table name no longer needs {}
+   ->fields(array(
+      'language' => $language->language,
+     // 'language' => 'und',
+   ))
+   ->condition('language', 'und')
+   ->execute();
+   drupal_set_message("hi");
+  drupal_set_message(t("Converted @count Content Items from Undefined to @language.", array("@count"=> $num_updated, "@language" => $language->name)));
+  drupal_goto();
+  return "";
+}
