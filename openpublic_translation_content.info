@@ -24,5 +24,5 @@ features[variable][] = "language_negotiation_language_content"
 features[variable][] = "language_negotiation_language_url"
 name = "OpenPublic Translation Content"
 package = "Features"
-apps[server] = 'foo'
+apps[server] = 'development'
 apps[manifests][] = 'app/manifest.app'
