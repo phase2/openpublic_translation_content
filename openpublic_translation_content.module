@@ -87,3 +87,19 @@ function openpublic_translation_content_convert_und() {
   drupal_goto();
   return "";
 }
+
+function openpublic_translation_content_multilingual_settings_changed() {
+  $info = language_negotiation_info();
+  $enabled_providers = variable_get("language_negotiation_language", array());
+  $providers_weight = variable_get('locale_language_providers_weight_language', array());
+
+  if (count($enabled_providers) == 1) {
+    $info['locale-session']['weight'] = -1;
+    $enabled_providers['locale-session'] = $info['locale-session'];
+    $enabled_providers['locale-session']['weight'] = $providers_weight['locale-session'];
+
+    // Add session switcher as a default if nothing else has been selected
+    language_negotiation_set('language', $enabled_providers);
+  }
+}
+
