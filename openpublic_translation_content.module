@@ -15,10 +15,10 @@ include_once('openpublic_translation_content.features.inc');
 function openpublic_translation_content_views_pre_view(&$view, $display_id) {
   $views_excluded = variable_get('openpublic_translation_content_excluded_views', array());
   if ($view->base_table == 'node' && !in_array($view->name, $views_excluded)) {
-    $view->display[$display_id]->handler->options['filters']['language']['id'] = 'language';
-    $view->display[$display_id]->handler->options['filters']['language']['table'] = 'node';
-    $view->display[$display_id]->handler->options['filters']['language']['field'] = 'language';
-    $view->display[$display_id]->handler->options['filters']['language']['value'] = array(
+    $view->display['default']->handler->options['filters']['language']['id'] = 'language';
+    $view->display['default']->handler->options['filters']['language']['table'] = 'node';
+    $view->display['default']->handler->options['filters']['language']['field'] = 'language';
+    $view->display['default']->handler->options['filters']['language']['value'] = array(
       '***CURRENT_LANGUAGE***' => '***CURRENT_LANGUAGE***',
     );
   }
