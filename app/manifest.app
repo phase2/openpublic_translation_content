@@ -7,5 +7,4 @@ author = Phase2 Technology
 author_url = http://www.phase2technology.com/
 logo = logo.png
 screenshots[] = screenshot.jpg
-dependencies[openpublic_translation_content] = openpublic_translation_content 1.0
 downloadables[openpublic_translation_content 1.0] = https://github.com/phase2/openpublic_translation_content/tarball/master
