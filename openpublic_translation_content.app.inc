@@ -44,7 +44,7 @@ function openpublic_translation_content_configure($form, $form_state) {
       'trans' => array(
         'data'=> array(
           t("String Translation"),
-          t('Drupal Provides an interface to translate the administion pages on the  !language_config_link.', array('!language_config_link'=> l('Translation Inteface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())))),
+          t('Drupal Provides an interface to translate the administion pages on the  !language_config_link.', array('!language_config_link'=> l('Translation Interface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())))),
           l('Translation Inteface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())),
         ),
       ),
