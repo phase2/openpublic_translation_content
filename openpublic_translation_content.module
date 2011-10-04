@@ -70,8 +70,8 @@ function openpublic_translation_content_menu() {
   return array(
     'admin/config/regional/convert-und' => array(
       'page callback' => 'openpublic_translation_content_convert_und',
-      'access callback' => TRUE,
-      //TODO: add perm 
+      'access arguments' => array('administer languages'),
+      'type' => MENU_CALLBACK,
     ),
   );
 
