@@ -16,11 +16,17 @@ function openpublic_translation_content_views_pre_view(&$view, $display_id) {
   //do not add the filter for views that are to be excluded
   $views_excluded = variable_get('openpublic_translation_content_excluded_views', array());
   if (($view->base_table == 'node') && 
-      (isset($views_excluded[$view->name]) || !$views_excluded[$view->name]) ) {
+      !(isset($views_excluded[$view->name]) && $views_excluded[$view->name]) ) {
     $view->display['default']->handler->options['filters']['language']['id'] = 'language';
     $view->display['default']->handler->options['filters']['language']['table'] = 'node';
     $view->display['default']->handler->options['filters']['language']['field'] = 'language';
     $view->display['default']->handler->options['filters']['language']['value'] = array(
+      '***CURRENT_LANGUAGE***' => '***CURRENT_LANGUAGE***',
+    );
+    $view->display[$display_id]->handler->options['filters']['language']['id'] = 'language';
+    $view->display[$display_id]->handler->options['filters']['language']['table'] = 'node';
+    $view->display[$display_id]->handler->options['filters']['language']['field'] = 'language';
+    $view->display[$display_id]->handler->options['filters']['language']['value'] = array(
       '***CURRENT_LANGUAGE***' => '***CURRENT_LANGUAGE***',
     );
   }
