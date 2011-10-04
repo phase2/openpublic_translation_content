@@ -90,7 +90,7 @@ function openpublic_translation_content_convert_und() {
    ))
    ->condition('language', 'und')
    ->execute();
-   drupal_set_message("hi");
+
   drupal_set_message(t("Converted @count Content Items from Undefined to @language.", array("@count"=> $num_updated, "@language" => $language->name)));
   drupal_goto();
   return "";
