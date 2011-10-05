@@ -91,6 +91,20 @@ function openpublic_translation_content_convert_und() {
    ->condition('language', 'und')
    ->execute();
 
+  $menu_updated = db_update('menu_custom')
+      ->fields(array(
+                   'i18n_mode' => I18N_MODE_MULTIPLE,
+               ))
+      ->execute();
+
+  $menu_item_updated = db_update('menu_links')
+      ->fields(array(
+                   'language' => $language->language,
+               ))
+      ->condition('language', 'und')
+      ->execute();
+  drupal_flush_all_caches();
+  
   drupal_set_message(t("Converted @count Content Items from Undefined to @language.", array("@count"=> $num_updated, "@language" => $language->name)));
   drupal_goto();
   return "";
