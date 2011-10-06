@@ -29,13 +29,27 @@ function openpublic_translation_content_configure($form, $form_state) {
   $und_query = db_select("node", 'n');
   $und_query->condition('n.language', 'und', '=');
   $count_of_und =$und_query->countQuery()->execute()->fetchField();
+  include_once 'includes/language.inc';
+
+  //find the current language detection methods enabled
+  $negotation = language_negotiation_info();
+  $active = variable_get("language_negotiation_language");
+  foreach($active as $key=> $stuff) {
+    if (isset($negotation[$key])) {
+      $detects[$key] = $negotation[$key]['name'];
+    }
+  }
+  $detect_last = array_pop($detects);
+  $detects_string = empty($detects) ? $detect_last : implode(" and ", array(implode(', ', $detects), $detect_last));
+
   global $language;
   $form['setup']['table'] = array(
     '#theme' => 'table',
-    '#header' => array("Step", "Instructions", "Action"),
+    '#header' => array("Status", "Step", "Instructions", "Action"),
     '#rows' => array(
       'lang' => array(
         'data'=> array(
+          theme("image", array("path" => "misc/watchdog-ok.png", "alt"=>"OK")),
           t("Language Setup"),
           t("Currently the site in enabled for @langs, to administer this or add more please see the !language_config_link.", array('@langs' => $langs_string, '!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination())))),
           l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination())),
@@ -43,13 +57,23 @@ function openpublic_translation_content_configure($form, $form_state) {
       ),
       'trans' => array(
         'data'=> array(
+          theme("image", array("path" => "misc/watchdog-ok.png", "alt"=>"OK")),
           t("String Translation"),
           t('Drupal Provides an interface to translate the administion pages on the  !language_config_link.', array('!language_config_link'=> l('Translation Interface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())))),
           l('Translation Inteface Page', 'admin/config/regional/translate',array('query'=>drupal_get_destination())),
         ),
       ),
+      'detect' => array(
+        'data'=> array(
+          theme("image", array("path" => "misc/watchdog-ok.png", "alt"=>"OK")),
+          t("Language Detection"),
+          t('Drupal Provides Multiple ways to detect which language is used this can be change on the !language_config_link. Currently the following are in place @current_detect.', array('!language_config_link'=> l('Translation Interface Page', 'admin/config/regional/language/configure',array('query'=>drupal_get_destination())), '@current_detect' => $detects_string )),
+          l('Language Detection Page', 'admin/config/regional/language/configure',array('query'=>drupal_get_destination())),
+        ),
+      ),
       'und' => array(
         'data'=> array(
+          theme("image", array("path" => "misc/watchdog-ok.png", "alt"=>"OK")),
           t("Convert Content"),
           t('When there is only one language on a site all content is labeled with the undefined language, this site as @count such items. If they stay undefined they can not be translated. From here you can convert all of them in mass to the default langague(@default_lang).', array('@count' => $count_of_und, '@default_lang' => $language->native)),
         l('Convert Undefined Content', 'admin/config/regional/convert-und',array('query'=>drupal_get_destination())),
@@ -59,12 +83,20 @@ function openpublic_translation_content_configure($form, $form_state) {
   );
   # if we only have one language lets warn the user
   if(empty($langs)) {
-    $form['setup']['table']['#rows']['lang']['data']['1'] = t('Currently only one language is configured please add additional languages on the !language_config_link.',array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination()))));
-    $form['setup']['table']['#rows']['lang']['data']['2'] = l('Add Language', 'admin/config/regional/language/add', array('query'=>drupal_get_destination()));
+    $form['setup']['table']['#rows']['lang']['data']['2'] = t('Currently only one language is configured please add additional languages on the !language_config_link.',array('!language_config_link'=> l('Language Configuration Page', 'admin/config/regional/language', array('query'=>drupal_get_destination()))));
+    $form['setup']['table']['#rows']['lang']['data']['3'] = l('Add Language', 'admin/config/regional/language/add', array('query'=>drupal_get_destination()));
+    $form['setup']['table']['#rows']['lang']['data']['0'] = theme("image", array("path" => "misc/watchdog-error.png", "alt"=>"Requires Changes"));
     $form['setup']['table']['#rows']['lang']['class'][] = 'error';
+  }
+  if(empty($detects)) {
+    $form['setup']['table']['#rows']['detect']['data']['0'] = theme("image", array("path" => "misc/watchdog-error.png", "alt"=>"Requires Changes"));
+    $form['setup']['table']['#rows']['detect']['data']['2'] .= t('With only the Default detection select, there will be no way to change the sites language.');
+    $form['setup']['table']['#rows']['detect']['class'][] = 'error';
+    $form['setup']['table']['#rows']['detect']['data']['3'] = l('Enable Detection Method', 'admin/config/regional/language/configure',array('query'=>drupal_get_destination()));
   }
   if($count_of_und>0) {
     $form['setup']['table']['#rows']['und']['class'][] = 'warning';
+    $form['setup']['table']['#rows']['und']['data']['0'] = theme("image", array("path" => "misc/watchdog-warning.png", "alt"=>"Warning"));
   }
 
   #allow for views to not get alter with a language filter
