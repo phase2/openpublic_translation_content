@@ -69,45 +69,56 @@ function openpublic_translation_content_requirements_api() {
 function openpublic_translation_content_menu() {
   return array(
     'admin/config/regional/convert-und' => array(
-      'page callback' => 'openpublic_translation_content_convert_und',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('openpublic_translation_content_convert_und'),
       'access arguments' => array('administer languages'),
       'type' => MENU_CALLBACK,
     ),
   );
 
 }
+
 /**
- * page call back for admin/config/regional/convert-und
+ * Form builder function for admin/config/regional/convert-und
  *
  * Convert all und to the current language and then return 
  */
-function openpublic_translation_content_convert_und() {
+function openpublic_translation_content_convert_und($form, &$form_state) {
   global $language;
-  $num_updated = db_update('node') // Table name no longer needs {}
-   ->fields(array(
-      'language' => $language->language,
-     // 'language' => 'und',
-   ))
-   ->condition('language', 'und')
-   ->execute();
+  
+  return confirm_form($form, t('Are you sure you want to convert all unassigned content to %lang?', array('%lang' => $language->name)), drupal_get_destination());
+}
 
+function openpublic_translation_content_convert_und_submit($form, &$form_state) {
+  global $language;
+
+  // Update menu languages.
   $menu_updated = db_update('menu_custom')
       ->fields(array(
                    'i18n_mode' => I18N_MODE_MULTIPLE,
                ))
       ->execute();
-
+  
   $menu_item_updated = db_update('menu_links')
       ->fields(array(
                    'language' => $language->language,
                ))
       ->condition('language', 'und')
       ->execute();
-  drupal_flush_all_caches();
   
-  drupal_set_message(t("Converted @count Content Items from Undefined to @language.", array("@count"=> $num_updated, "@language" => $language->name)));
-  drupal_goto();
-  return "";
+  // update nodes.
+  $nids = array();
+  $result = db_query("SELECT nid FROM {node} WHERE language='und'");
+  foreach ($result as $record) {
+    $nids[] = $record->nid;
+  }
+
+  if (count($nids)) {
+    module_load_include('inc', 'node', 'node.admin');
+    node_mass_update($nids, array('newlang' => $language->language));
+  }
+
+  $form_state['redirect'] = FALSE;
 }
 
 function openpublic_translation_content_multilingual_settings_changed() {
@@ -126,3 +137,32 @@ function openpublic_translation_content_multilingual_settings_changed() {
   }
 }
 
+/**
+ * When converting languages, we need to make sure that all fields get the new language
+ */
+function openpublic_translation_content_node_presave($node) {
+  if (isset($node->newlang) && field_has_translation_handler('node', 'locale')) {
+    $new_language = $node->newlang;
+    $previous_language = $node->language; 
+    
+    $node->language = $new_language;
+    
+    unset($node->languageassign_langcode);
+    
+    $available_languages = field_content_languages();
+    list(, , $bundle) = entity_extract_ids('node', $node);
+    
+    foreach (field_info_instances('node', $bundle) as $instance) {
+      $field_name = $instance['field_name'];
+      $field = field_info_field($field_name);
+
+      // Handle a possible language change: new language values are inserted,
+      // previous ones are deleted.
+      
+      if ($field['translatable'] && $previous_language != $new_language) {
+        $node->{$field_name}[$new_language] = $node->{$field_name}[$previous_language];
+        $node->{$field_name}[$previous_language] = array();
+      }
+    }    
+  }   
+}
