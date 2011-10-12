@@ -130,7 +130,7 @@ function openpublic_translation_content_multilingual_settings_changed() {
 
   if (count($enabled_providers) <= 1) {
     $enabled_providers[LANGUAGE_NEGOTIATION_DEFAULT] = $info[LANGUAGE_NEGOTIATION_DEFAULT];
-    $enabled_providers['locale-session'] = $info['locale-session'];
+    $enabled_providers['locale-url'] = $info['locale-url'];
 
     // Add session switcher as a default if nothing else has been selected
     language_negotiation_set('language', $enabled_providers);
