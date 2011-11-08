@@ -29,8 +29,12 @@ function openpublic_translation_content_configure($form, $form_state) {
   $und_query = db_select("node", 'n');
   $und_query->condition('n.language', 'und', '=');
   $count_of_und =$und_query->countQuery()->execute()->fetchField();
+  $count_of_und_menu = db_select("menu_links", 'l')
+    ->condition('l.language', 'und', '=')
+    ->countQuery()->execute()->fetchField();
+  
   include_once 'includes/language.inc';
-
+  
   //find the current language detection methods enabled
   $negotation = language_negotiation_info();
   $active = variable_get("language_negotiation_language");
@@ -75,8 +79,16 @@ function openpublic_translation_content_configure($form, $form_state) {
         'data'=> array(
           theme("image", array("path" => "misc/watchdog-ok.png", "alt"=>"OK")),
           t("Convert Content"),
-          t('When there is only one language on a site all content is labeled with the undefined language, this site as @count such items. If they stay undefined they can not be translated. From here you can convert all of them in mass to the default langague(@default_lang).', array('@count' => $count_of_und, '@default_lang' => $language->native)),
+          t('When there is only one language on a site all content is labeled with the undefined language, this site has @count such items. If they stay undefined they can not be translated. From here you can convert all of them in mass to the default langague(@default_lang).', array('@count' => $count_of_und, '@default_lang' => $language->native)),
         l('Convert Undefined Content', 'admin/config/regional/convert-und',array('query'=>drupal_get_destination())),
+        ),
+      ),
+      'und_menu' => array(
+        'data'=> array(
+          theme("image", array("path" => "misc/watchdog-ok.png", "alt"=>"OK")),
+          t("Convert Menus"),
+          t('When there is only one language on a site all menu items are labeled with the undefined language, this site has @count such items. If they stay undefined they can not be translated. From here you can convert all of them in mass to the default langague(@default_lang).', array('@count' => $count_of_und_menu, '@default_lang' => $language->native)),
+          l('Convert Undefined Menus', 'admin/config/regional/convert-und-menu',array('query'=>drupal_get_destination())),
         ),
       ),
     ),
@@ -94,9 +106,14 @@ function openpublic_translation_content_configure($form, $form_state) {
     $form['setup']['table']['#rows']['detect']['class'][] = 'error';
     $form['setup']['table']['#rows']['detect']['data']['3'] = l('Enable Detection Method', 'admin/config/regional/language/configure',array('query'=>drupal_get_destination()));
   }
-  if($count_of_und>0) {
+  if($count_of_und > 0) {
     $form['setup']['table']['#rows']['und']['class'][] = 'warning';
     $form['setup']['table']['#rows']['und']['data']['0'] = theme("image", array("path" => "misc/watchdog-warning.png", "alt"=>"Warning"));
+  }
+
+  if($count_of_und_menu > 0) {
+    $form['setup']['table']['#rows']['und_menu']['class'][] = 'warning';
+    $form['setup']['table']['#rows']['und_menu']['data']['0'] = theme("image", array("path" => "misc/watchdog-warning.png", "alt"=>"Warning"));
   }
 
   #allow for views to not get alter with a language filter
