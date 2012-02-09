@@ -117,6 +117,18 @@ function openpublic_translation_content_configure($form, $form_state) {
   }
 
   #allow for views to not get alter with a language filter
+  $form['options'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Options',
+  );
+  $form['options']['enable_switcher'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Enable the Language Switcher block',
+    '#description' => t('OpenPublic Translation Content will add a context placing the Language Switcher block in the sidebar.'),
+    '#default_value' => variable_get('openpublic_translation_enable_switcher', 1),
+  );
+
+  #allow for views to not get alter with a language filter
   $form['views'] = array(
     '#type' => 'fieldset',
     '#title' => 'Langauge View Alters',
@@ -141,10 +153,20 @@ function openpublic_translation_content_configure($form, $form_state) {
   );
   return $form;
 }
+
+function _openpublic_translation_content_enable_context($value) {
+  $context = context_load('language_switch');
+  ctools_export_set_object_status($context, !$value);
+  context_save($context);
+  
+}
+
 /*
  * implement submit for openpublic_translation_content_configure form
  */
 function openpublic_translation_content_configure_submit($form, &$form_state) {
   #save value of excluded views
   variable_set('openpublic_translation_content_excluded_views', $form_state['values']['views_excluded']);
+  variable_set('openpublic_translation_enable_switcher', $form_state['values']['enable_switcher']);
+  _openpublic_translation_content_enable_context($form_state['values']['enable_switcher']);
 }

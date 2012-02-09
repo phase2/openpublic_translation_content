@@ -15,7 +15,7 @@ function openpublic_translation_content_context_default_contexts() {
   $context->api_version = 3;
   $context->name = 'language_switch';
   $context->description = '';
-  $context->tag = 'test';
+  $context->tag = 'OpenPublic Translation';
   $context->conditions = array(
     'sitewide' => array(
       'values' => array(
@@ -39,7 +39,7 @@ function openpublic_translation_content_context_default_contexts() {
 
   // Translatables
   // Included for use with string extractors like potx.
-  t('test');
+  t('OpenPublic Translation');
   $export['language_switch'] = $context;
 
   return $export;
