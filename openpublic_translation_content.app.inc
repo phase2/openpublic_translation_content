@@ -154,13 +154,6 @@ function openpublic_translation_content_configure($form, $form_state) {
   return $form;
 }
 
-function _openpublic_translation_content_enable_context($value) {
-  $context = context_load('language_switch');
-  ctools_export_set_object_status($context, !$value);
-  context_save($context);
-  
-}
-
 /*
  * implement submit for openpublic_translation_content_configure form
  */
@@ -168,5 +161,5 @@ function openpublic_translation_content_configure_submit($form, &$form_state) {
   #save value of excluded views
   variable_set('openpublic_translation_content_excluded_views', $form_state['values']['views_excluded']);
   variable_set('openpublic_translation_enable_switcher', $form_state['values']['enable_switcher']);
-  _openpublic_translation_content_enable_context($form_state['values']['enable_switcher']);
+  openpublic_translation_content_enable_context($form_state['values']['enable_switcher']);
 }

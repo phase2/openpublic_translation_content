@@ -7,6 +7,13 @@
 include_once('openpublic_translation_content.features.inc');
 
 
+/*
+ * Implements hook_init().
+ */
+function openpublic_translation_content_init() {
+  openpublic_translation_content_enable_context(variable_get('openpublic_translation_enable_switcher', 1));
+}
+
 /**
  * Implementation of hook_views_pre_view().
  *
@@ -189,4 +196,19 @@ function openpublic_translation_content_node_presave($node) {
       }
     }    
   }   
+}
+
+function openpublic_translation_content_enable_context($value) {
+  $context = context_load('language_switch');
+  if (isset($context->disabled) && $context->disabled && !$value) {
+    // no change - disabled
+  }
+  else if (!isset($context->disabled) && $value) {
+    // no change - enabled
+  }
+  else {
+    // changing value
+    ctools_export_set_object_status($context, !$value);
+    context_save($context);
+  }
 }
