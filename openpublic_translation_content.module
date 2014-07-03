@@ -6,24 +6,15 @@
 
 include_once('openpublic_translation_content.features.inc');
 
-
-/*
- * Implements hook_init().
- */
-function openpublic_translation_content_init() {
-  openpublic_translation_content_enable_context(variable_get('openpublic_translation_enable_switcher', 1));
-}
-
 /**
- * Implementation of hook_views_pre_view().
+ * Implements hook_views_pre_view().
  *
  * Add in a language filter for the current language.
  */
 function openpublic_translation_content_views_pre_view(&$view, $display_id) {
   //do not add the filter for views that are to be excluded
   $views_excluded = variable_get('openpublic_translation_content_excluded_views', array());
-  if (($view->base_table == 'node') && 
-      !(isset($views_excluded[$view->name]) && $views_excluded[$view->name]) ) {
+  if ($view->base_table == 'node' && empty($views_excluded[$view->name])) {
     $view->display['default']->handler->options['filters']['language']['id'] = 'language';
     $view->display['default']->handler->options['filters']['language']['table'] = 'node';
     $view->display['default']->handler->options['filters']['language']['field'] = 'language';
@@ -40,7 +31,6 @@ function openpublic_translation_content_views_pre_view(&$view, $display_id) {
     );
   }
 }
-
 
 /**
  * Implements hook_requirements_api()
@@ -68,12 +58,12 @@ function openpublic_translation_content_requirements_api() {
     $tran['severity'] = REQUIREMENT_OK;
   }
   return array("openpublic_translation_content", $tran);
-  
+
 
 }
 
 /**
- * implements hook_menu()
+ * Implements hook_menu().
  */
 function openpublic_translation_content_menu() {
   return array(
@@ -96,27 +86,28 @@ function openpublic_translation_content_menu() {
 /**
  * Form builder function for admin/config/regional/convert-und
  *
- * Convert all und to the current language and then return 
+ * Convert all und to the current language and then return
  */
 function openpublic_translation_content_convert_und($form, &$form_state) {
   global $language;
-  
   return confirm_form($form, t('Are you sure you want to convert all unassigned content to %lang?', array('%lang' => $language->name)), drupal_get_destination());
 }
 
+/**
+ * Submit handler that switches all language neutral nodes to current language.
+ */
 function openpublic_translation_content_convert_und_submit($form, &$form_state) {
   global $language;
 
-  // update nodes.
-  $nids = array();
-  $result = db_query("SELECT nid FROM {node} WHERE language='und'");
-  foreach ($result as $record) {
-    $nids[] = $record->nid;
-  }
-
-  if (count($nids)) {
+  // Update nodes.
+  $nids = db_query("SELECT nid FROM {node} WHERE language=:lang", array(':lang' => LANGUAGE_NONE))->fetchCol();
+  if ($nids) {
     module_load_include('inc', 'node', 'node.admin');
     node_mass_update($nids, array('newlang' => $language->language));
+    drupal_set_message(t('Converted @count nodes.', array('@count' => $nids)));
+  }
+  else {
+    drupal_set_message(t('No language neutral nodes found'));
   }
 
   // Ensure default languages are getting set.
@@ -132,14 +123,17 @@ function openpublic_translation_content_convert_und_submit($form, &$form_state) 
 /**
  * Form builder function for admin/config/regional/convert-und-menu
  *
- * Convert all und to the current language and then return 
+ * Convert all und to the current language and then return
  */
 function openpublic_translation_content_convert_und_menu($form, &$form_state) {
   global $language;
-  
+
   return confirm_form($form, t('Are you sure you want to convert all unassigned menu items to %lang?', array('%lang' => $language->name)), drupal_get_destination());
 }
 
+/**
+ * Submit handler that converts any menu and links to current site language.
+ */
 function openpublic_translation_content_convert_und_menu_submit($form, &$form_state) {
   global $language;
 
@@ -150,7 +144,7 @@ function openpublic_translation_content_convert_und_menu_submit($form, &$form_st
                    'language' => $language->language,
                ))
       ->execute();
-  
+
   $menu_item_updated = db_update('menu_links')
       ->fields(array(
                    'language' => $language->language,
@@ -159,6 +153,9 @@ function openpublic_translation_content_convert_und_menu_submit($form, &$form_st
       ->execute();
 }
 
+/**
+ * @todo Is this function being used for something?
+ */
 function openpublic_translation_content_multilingual_settings_changed() {
   if (!function_exists('language_negotiation_info')) {
     drupal_language_initialize();
@@ -176,46 +173,32 @@ function openpublic_translation_content_multilingual_settings_changed() {
 }
 
 /**
+ * Implements hook_node_presave().
+ *
  * When converting languages, we need to make sure that all fields get the new language
  */
 function openpublic_translation_content_node_presave($node) {
   if (isset($node->newlang) && field_has_translation_handler('node', 'locale')) {
     $new_language = $node->newlang;
-    $previous_language = $node->language; 
-    
+    $previous_language = $node->language;
+
     $node->language = $new_language;
-    
+
     unset($node->languageassign_langcode);
-    
+
     $available_languages = field_content_languages();
     list(, , $bundle) = entity_extract_ids('node', $node);
-    
+
     foreach (field_info_instances('node', $bundle) as $instance) {
       $field_name = $instance['field_name'];
       $field = field_info_field($field_name);
 
       // Handle a possible language change: new language values are inserted,
       // previous ones are deleted.
-      
       if ($field['translatable'] && $previous_language != $new_language) {
         $node->{$field_name}[$new_language] = $node->{$field_name}[$previous_language];
         $node->{$field_name}[$previous_language] = array();
       }
-    }    
-  }   
-}
-
-function openpublic_translation_content_enable_context($value) {
-  $context = context_load('language_switch');
-  if (isset($context->disabled) && $context->disabled && !$value) {
-    // no change - disabled
-  }
-  else if (!isset($context->disabled) && $value) {
-    // no change - enabled
-  }
-  else {
-    // changing value
-    ctools_export_set_object_status($context, !$value);
-    context_save($context);
+    }
   }
 }
